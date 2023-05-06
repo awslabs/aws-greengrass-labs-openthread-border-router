@@ -1,0 +1,44 @@
+RecipeFormatVersion: 2020-01-25
+ComponentName: aws.greengrass.labs.OpenThreadBorderRouter
+ComponentVersion: 1.0.0
+ComponentDescription: OpenThread Border Router
+ComponentPublisher: Amazon
+ComponentConfiguration:
+  DefaultConfiguration:
+    port: 80
+    volume: /dev/ttyACM0:/dev/ttyACM0
+    radioUrl: spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=460800
+    backboneInterface: eth0
+ComponentDependencies:
+  aws.greengrass.DockerApplicationManager:
+    VersionRequirement: ^2.0.0
+Manifests:
+- Platform:
+    os: linux
+  Lifecycle:
+    Install:
+      RequiresPrivilege: true
+      Script: modprobe ip6table_filter
+    Startup:
+      Setenv:
+        REPO: 'openthread/otbr'
+      Script: >-
+        docker run
+        --detach
+        --name "otbr"
+        --rm
+        --sysctl "net.ipv6.conf.all.disable_ipv6=0 net.ipv4.conf.all.forwarding=1 net.ipv6.conf.all.forwarding=1"
+        -p {configuration:/port}:80
+        --dns=127.0.0.1
+        --volume {configuration:/volume}
+        --privileged $REPO
+        --radio-url {configuration:/radioUrl}
+        --backbone-interface {configuration:/backboneInterface}
+        && dangling_images=$(docker images $REPO --filter "dangling=true" --quiet)
+        && if ! test "$dangling_images" = ""; then echo "Deleting dangling images"; docker rmi $dangling_images; fi
+    Shutdown:
+      Script: >-
+        docker stop otbr
+  Artifacts:
+  - Uri: docker:openthread/otbr:latest
+Lifecycle: {}

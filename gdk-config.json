@@ -1,0 +1,21 @@
+{
+  "component": {
+    "aws.greengrass.labs.OpenThreadBorderRouter": {
+      "author": "Amazon",
+      "version": "1.0.0",
+      "build": {
+        "build_system": "custom",
+        "custom_build_command": [
+          "cp",
+          "recipe.yaml",
+          "greengrass-build/recipes"
+        ]
+    },
+      "publish": {
+        "bucket": "greengrass-openthread-border-router",
+        "region": "us-east-1"
+      }
+    }
+  },
+  "gdk_version": "1.0.0"
+}
